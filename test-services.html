@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test de Microservicios - Wakanda</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #0f172a;
+            color: #f1f5f9;
+        }
+        h1 { color: #60a5fa; }
+        .test-section {
+            background: #1e293b;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0.5rem;
+            border: 1px solid #334155;
+        }
+        .endpoint {
+            margin: 0.5rem 0;
+            padding: 0.75rem;
+            background: #0f172a;
+            border-radius: 0.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .endpoint-url {
+            font-family: monospace;
+            color: #60a5fa;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+        button:hover { background: #2563eb; }
+        .result {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background: #020617;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .success { border-left: 4px solid #22c55e; }
+        .error { border-left: 4px solid #ef4444; }
+        .loading { border-left: 4px solid #fbbf24; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test de Microservicios - Wakanda Smart City</h1>
+    
+    <div class="test-section">
+        <h2>1. Verificar Eureka Dashboard</h2>
+        <p>Debes ver todos los servicios registrados en: <a href="http://localhost:8761" target="_blank">http://localhost:8761</a></p>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Probar Endpoints a través del API Gateway</h2>
+        
+        <div class="endpoint">
+            <span class="endpoint-url">GET /api/waste/containers/status</span>
+            <button onclick="testEndpoint('waste/containers/status', 'waste-result')">Probar</button>
+        </div>
+        <div id="waste-result" class="result"></div>
+
+        <div class="endpoint">
+            <span class="endpoint-url">GET /api/traffic/status</span>
+            <button onclick="testEndpoint('traffic/status', 'traffic-result')">Probar</button>
+        </div>
+        <div id="traffic-result" class="result"></div>
+
+        <div class="endpoint">
+            <span class="endpoint-url">GET /api/security/status</span>
+            <button onclick="testEndpoint('security/status', 'security-result')">Probar</button>
+        </div>
+        <div id="security-result" class="result"></div>
+
+        <div class="endpoint">
+            <span class="endpoint-url">GET /api/health/status</span>
+            <button onclick="testEndpoint('health/status', 'health-result')">Probar</button>
+        </div>
+        <div id="health-result" class="result"></div>
+
+        <div class="endpoint">
+            <span class="endpoint-url">GET /api/emergency/status</span>
+            <button onclick="testEndpoint('emergency/status', 'emergency-result')">Probar</button>
+        </div>
+        <div id="emergency-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Probar Endpoints de Datos</h2>
+        
+        <div class="endpoint">
+            <span class="endpoint-url">GET /api/waste/containers</span>
+            <button onclick="testEndpoint('waste/containers', 'waste-data-result')">Probar</button>
+        </div>
+        <div id="waste-data-result" class="result"></div>
+
+        <div class="endpoint">
+            <span class="endpoint-url">GET /api/traffic/lights</span>
+            <button onclick="testEndpoint('traffic/lights', 'traffic-data-result')">Probar</button>
+        </div>
+        <div id="traffic-data-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Probar Todos los Servicios</h2>
+        <button onclick="testAll()" style="padding: 1rem 2rem; font-size: 1rem;">🚀 Probar Todos</button>
+    </div>
+
+    <script>
+        const GATEWAY_URL = 'http://localhost:8080/api';
+
+        async function testEndpoint(path, resultId) {
+            const resultDiv = document.getElementById(resultId);
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Probando...';
+
+            try {
+                const response = await fetch(`${GATEWAY_URL}/${path}`);
+                const data = await response.json();
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Status: ${response.status}\n\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}\n\nAsegúrate de que:\n- El API Gateway esté corriendo (puerto 8080)\n- El microservicio correspondiente esté corriendo\n- Eureka esté corriendo (puerto 8761)`;
+            }
+        }
+
+        async function testAll() {
+            const endpoints = [
+                { path: 'waste/containers/status', resultId: 'waste-result' },
+                { path: 'traffic/status', resultId: 'traffic-result' },
+                { path: 'security/status', resultId: 'security-result' },
+                { path: 'health/status', resultId: 'health-result' },
+                { path: 'emergency/status', resultId: 'emergency-result' }
+            ];
+
+            for (const endpoint of endpoints) {
+                await testEndpoint(endpoint.path, endpoint.resultId);
+                await new Promise(resolve => setTimeout(resolve, 500)); // Esperar 500ms entre requests
+            }
+        }
+    </script>
+</body>
+</html>
+

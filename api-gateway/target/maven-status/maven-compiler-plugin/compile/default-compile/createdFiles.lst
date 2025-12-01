@@ -1,0 +1,3 @@
+com\wakanda\gateway\config\GatewayConfig.class
+com\wakanda\gateway\config\CorsConfig.class
+com\wakanda\gateway\ApiGatewayApplication.class

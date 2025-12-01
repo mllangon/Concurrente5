@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Wakanda Smart City - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0f172a;
+            color: #f1f5f9;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #60a5fa;
+        }
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .service-card {
+            background: #1e293b;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            border: 2px solid #334155;
+            transition: all 0.3s;
+        }
+        .service-card:hover {
+            border-color: #60a5fa;
+            transform: translateY(-2px);
+        }
+        .service-card.up {
+            border-color: #22c55e;
+        }
+        .service-card.down {
+            border-color: #ef4444;
+        }
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .service-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #60a5fa;
+        }
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-badge.up {
+            background: #22c55e;
+            color: white;
+        }
+        .status-badge.down {
+            background: #ef4444;
+            color: white;
+        }
+        .service-info {
+            margin-top: 1rem;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #334155;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            color: #94a3b8;
+        }
+        .info-value {
+            color: #f1f5f9;
+            font-weight: 500;
+        }
+        .refresh-btn {
+            display: block;
+            margin: 2rem auto;
+            padding: 0.75rem 2rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .refresh-btn:hover {
+            background: #2563eb;
+        }
+        .loading {
+            text-align: center;
+            color: #94a3b8;
+            margin: 2rem 0;
+        }
+        .command-section {
+            background: #1e293b;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 2px solid #334155;
+        }
+        .command-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: #60a5fa;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .command-input-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .command-input {
+            flex: 1;
+            padding: 0.75rem;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 0.5rem;
+            color: #f1f5f9;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        .command-input:focus {
+            outline: none;
+            border-color: #60a5fa;
+        }
+        .command-btn {
+            padding: 0.75rem 1.5rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .command-btn:hover {
+            background: #2563eb;
+        }
+        .command-output {
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #f1f5f9;
+        }
+        .command-line {
+            margin-bottom: 0.5rem;
+            padding: 0.25rem 0;
+        }
+        .command-line.success {
+            color: #22c55e;
+        }
+        .command-line.error {
+            color: #ef4444;
+        }
+        .command-line.info {
+            color: #60a5fa;
+        }
+        .command-help {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #334155;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+        .command-help h3 {
+            color: #60a5fa;
+            margin-bottom: 0.5rem;
+        }
+        .command-help ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .command-help li {
+            margin: 0.25rem 0;
+            padding-left: 1rem;
+        }
+        .command-help code {
+            background: #0f172a;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            color: #60a5fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏛️ Wakanda Smart City - Dashboard de Microservicios</h1>
+        
+        <div class="command-section">
+            <div class="command-header">
+                <span>⚡</span>
+                <span>Línea de Comandos</span>
+            </div>
+            <div class="command-input-container">
+                <input type="text" id="commandInput" class="command-input" 
+                       placeholder="Escribe un comando (ej: add-waste 1 20) y presiona Enter"
+                       onkeypress="if(event.key === 'Enter') executeCommand()">
+                <button class="command-btn" onclick="executeCommand()">Ejecutar</button>
+            </div>
+            <div id="commandOutput" class="command-output"></div>
+            <div class="command-help">
+                <h3>Comandos disponibles:</h3>
+                <ul>
+                    <li><code>help</code> - Mostrar ayuda general con todos los comandos</li>
+                    <li><code>help-waste</code> - Ayuda del servicio de residuos</li>
+                    <li><code>help-traffic</code> - Ayuda del servicio de tráfico</li>
+                    <li><code>help-security</code> - Ayuda del servicio de seguridad</li>
+                    <li><code>help-health</code> - Ayuda del servicio de salud</li>
+                    <li><code>help-emergency</code> - Ayuda del servicio de emergencias</li>
+                    <li><code>test</code> - Probar conexión con API Gateway</li>
+                    <li><code>clear</code> - Limpiar la consola</li>
+                </ul>
+            </div>
+        </div>
+        
+        <button class="refresh-btn" onclick="loadAllServices()">🔄 Actualizar Estado</button>
+        
+        <div id="loading" class="loading">Cargando servicios...</div>
+        
+        <div id="services-grid" class="services-grid"></div>
+    </div>
+
+    <script>
+        const API_GATEWAY_URL = 'http://localhost:8080/api';
+        
+        const services = [
+            { name: 'waste-service', path: '/waste/containers/status', displayName: 'Gestión de Residuos' },
+            { name: 'traffic-service', path: '/traffic/status', displayName: 'Gestión de Tráfico' },
+            { name: 'security-service', path: '/security/status', displayName: 'Seguridad y Vigilancia' },
+            { name: 'health-service', path: '/health/status', displayName: 'Salud y Bienestar' },
+            { name: 'emergency-service', path: '/emergency/status', displayName: 'Servicios de Emergencia' }
+        ];
+
+        async function loadAllServices() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('services-grid').innerHTML = '';
+            
+            const promises = services.map(service => loadService(service));
+            await Promise.all(promises);
+            
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        async function loadService(service) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos timeout
+                
+                const response = await fetch(`${API_GATEWAY_URL}${service.path}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+                }
+                
+                const data = await response.json();
+                const card = createServiceCard(service.displayName, service.name, data, true);
+                document.getElementById('services-grid').appendChild(card);
+            } catch (error) {
+                console.error(`Error loading ${service.name}:`, error);
+                const card = createServiceCard(service.displayName, service.name, null, false);
+                const errorInfo = document.createElement('div');
+                errorInfo.className = 'info-item';
+                let errorMsg = error.message;
+                if (error.name === 'AbortError') {
+                    errorMsg = 'Timeout: El servicio no respondió a tiempo';
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorMsg = 'Error de conexión: Verifica que el API Gateway esté corriendo';
+                }
+                errorInfo.innerHTML = `
+                    <span class="info-label">Error:</span>
+                    <span class="info-value">${errorMsg}</span>
+                `;
+                card.querySelector('.service-info').appendChild(errorInfo);
+                document.getElementById('services-grid').appendChild(card);
+            }
+        }
+
+        function createServiceCard(displayName, serviceName, data, isUp) {
+            const card = document.createElement('div');
+            card.className = `service-card ${isUp ? 'up' : 'down'}`;
+            
+            const header = document.createElement('div');
+            header.className = 'service-header';
+            header.innerHTML = `
+                <span class="service-name">${displayName}</span>
+                <span class="status-badge ${isUp ? 'up' : 'down'}">${isUp ? 'UP' : 'DOWN'}</span>
+            `;
+            
+            const info = document.createElement('div');
+            info.className = 'service-info';
+            
+            if (isUp && data) {
+                Object.entries(data).forEach(([key, value]) => {
+                    if (key !== 'service' && key !== 'status') {
+                        const item = document.createElement('div');
+                        item.className = 'info-item';
+                        item.innerHTML = `
+                            <span class="info-label">${formatLabel(key)}:</span>
+                            <span class="info-value">${value}</span>
+                        `;
+                        info.appendChild(item);
+                    }
+                });
+            } else {
+                const item = document.createElement('div');
+                item.className = 'info-item';
+                item.innerHTML = `
+                    <span class="info-label">Estado:</span>
+                    <span class="info-value">Servicio no disponible</span>
+                `;
+                info.appendChild(item);
+            }
+            
+            card.appendChild(header);
+            card.appendChild(info);
+            
+            return card;
+        }
+
+        function formatLabel(key) {
+            return key
+                .replace(/([A-Z])/g, ' $1')
+                .replace(/^./, str => str.toUpperCase())
+                .trim();
+        }
+
+        // ========== LÍNEA DE COMANDOS ==========
+        const commandHistory = [];
+        let commandHistoryIndex = -1;
+
+        function addOutput(message, type = 'info') {
+            const output = document.getElementById('commandOutput');
+            const line = document.createElement('div');
+            line.className = `command-line ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            line.textContent = `[${timestamp}] ${message}`;
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // Función de diagnóstico
+        async function testConnection() {
+            addOutput('🔍 Probando conexión con API Gateway...', 'info');
+            try {
+                const response = await fetch(`${API_GATEWAY_URL}/waste/containers/status`);
+                if (response.ok) {
+                    addOutput('✅ API Gateway está respondiendo correctamente', 'success');
+                } else {
+                    addOutput(`⚠️ API Gateway responde pero con error: HTTP ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addOutput(`❌ No se puede conectar al API Gateway (${API_GATEWAY_URL})`, 'error');
+                addOutput('   Verifica que el API Gateway esté corriendo en el puerto 8080', 'info');
+                addOutput('   Asegúrate de que todos los servicios estén iniciados', 'info');
+            }
+        }
+
+        function executeCommand() {
+            const input = document.getElementById('commandInput');
+            const command = input.value.trim();
+            
+            if (!command) return;
+            
+            // Guardar en historial
+            commandHistory.push(command);
+            commandHistoryIndex = commandHistory.length;
+            
+            // Mostrar comando ejecutado
+            addOutput(`> ${command}`, 'info');
+            
+            // Parsear y ejecutar comando
+            const parts = command.split(' ');
+            const cmd = parts[0].toLowerCase();
+            
+            // Comando de prueba
+            if (cmd === 'test') {
+                testConnection();
+                input.value = '';
+                return;
+            }
+            
+            switch(cmd) {
+                case 'waste-help':
+                case 'help-waste':
+                    showWasteHelp();
+                    break;
+                    
+                case 'waste-levels':
+                case 'waste-status':
+                    executeWasteLevels();
+                    break;
+                    
+                case 'waste-collect':
+                    if (parts.length < 2) {
+                        addOutput('❌ Uso: waste-collect <containerId> o waste-collect all', 'error');
+                        break;
+                    }
+                    const collectId = parts[1];
+                    if (collectId.toLowerCase() === 'all') {
+                        executeCollectAllWaste();
+                    } else {
+                        executeCollectWaste(collectId);
+                    }
+                    break;
+                    
+                case 'add-waste':
+                    if (parts.length < 2) {
+                        addOutput('❌ Uso: add-waste <containerId> [amount]', 'error');
+                        break;
+                    }
+                    const containerId = parts[1];
+                    const amount = parts[2] || '10';
+                    executeAddWaste(containerId, amount);
+                    break;
+                    
+                case 'create-emergency':
+                    if (parts.length < 3) {
+                        addOutput('❌ Uso: create-emergency <type> <location> [priority]', 'error');
+                        break;
+                    }
+                    // Parsear: create-emergency TYPE "LOCATION" PRIORITY o create-emergency TYPE LOCATION PRIORITY
+                    const type = parts[1];
+                    let location, priority;
+                    if (parts.length === 3) {
+                        // Solo type y location
+                        location = parts[2];
+                        priority = 'HIGH';
+                    } else if (parts.length === 4) {
+                        // type, location, priority
+                        location = parts[2];
+                        priority = parts[3];
+                    } else {
+                        // location puede tener espacios, tomar todo excepto el último como location
+                        location = parts.slice(2, -1).join(' ');
+                        priority = parts[parts.length - 1];
+                    }
+                    executeCreateEmergency(type, location, priority);
+                    break;
+                    
+                case 'traffic-help':
+                case 'help-traffic':
+                    showTrafficHelp();
+                    break;
+                    
+                case 'traffic-lights':
+                case 'traffic-status':
+                    executeTrafficLights();
+                    break;
+                    
+                case 'traffic-sensors':
+                    executeTrafficSensors();
+                    break;
+                    
+                case 'change-light':
+                    if (parts.length < 3) {
+                        addOutput('❌ Uso: change-light <lightId> <state>', 'error');
+                        break;
+                    }
+                    executeChangeLight(parts[1], parts[2]);
+                    break;
+                    
+                case 'security-help':
+                case 'help-security':
+                    showSecurityHelp();
+                    break;
+                    
+                case 'security-cameras':
+                case 'security-status':
+                    executeSecurityCameras();
+                    break;
+                    
+                case 'security-drones':
+                    executeSecurityDrones();
+                    break;
+                    
+                case 'drone-patrol':
+                    if (parts.length < 2) {
+                        addOutput('❌ Uso: drone-patrol <droneId>', 'error');
+                        break;
+                    }
+                    executeDronePatrol(parts[1]);
+                    break;
+                    
+                case 'camera-alert':
+                    if (parts.length < 3) {
+                        addOutput('❌ Uso: camera-alert <cameraId> <alertType>', 'error');
+                        break;
+                    }
+                    executeCameraAlert(parts[1], parts[2]);
+                    break;
+                    
+                case 'health-help':
+                case 'help-health':
+                    showHealthHelp();
+                    break;
+                    
+                case 'health-centers':
+                case 'health-status':
+                    executeHealthCenters();
+                    break;
+                    
+                case 'health-appointments':
+                    executeHealthAppointments();
+                    break;
+                    
+                case 'create-appointment':
+                    if (parts.length < 4) {
+                        addOutput('❌ Uso: create-appointment <patientId> <centerId> <date>', 'error');
+                        break;
+                    }
+                    executeCreateAppointment(parts[1], parts[2], parts[3]);
+                    break;
+                    
+                case 'emergency-help':
+                case 'help-emergency':
+                    showEmergencyHelp();
+                    break;
+                    
+                case 'emergency-units':
+                case 'emergency-status':
+                    executeEmergencyUnits();
+                    break;
+                    
+                case 'emergency-incidents':
+                    executeEmergencyIncidents();
+                    break;
+                    
+                case 'assign-unit':
+                    if (parts.length < 2) {
+                        addOutput('❌ Uso: assign-unit <unitId> [incidentId]', 'error');
+                        break;
+                    }
+                    const unitId = parts[1];
+                    const incidentId = parts[2] || null;
+                    executeAssignUnit(unitId, incidentId);
+                    break;
+                    
+                case 'test':
+                    testConnection();
+                    break;
+                    
+                case 'help':
+                    showGeneralHelp();
+                    break;
+                    
+                case 'help-waste':
+                case 'waste-help':
+                    showWasteHelp();
+                    break;
+                    
+                case 'help-traffic':
+                case 'traffic-help':
+                    showTrafficHelp();
+                    break;
+                    
+                case 'help-security':
+                case 'security-help':
+                    showSecurityHelp();
+                    break;
+                    
+                case 'help-health':
+                case 'health-help':
+                    showHealthHelp();
+                    break;
+                    
+                case 'help-emergency':
+                case 'emergency-help':
+                    showEmergencyHelp();
+                    break;
+                    
+                case 'clear':
+                    document.getElementById('commandOutput').innerHTML = '';
+                    break;
+                    
+                default:
+                    addOutput(`❌ Comando desconocido: ${cmd}. Escribe 'help' para ver comandos disponibles.`, 'error');
+            }
+            
+            input.value = '';
+        }
+
+        function showGeneralHelp() {
+            addOutput('📚 Comandos generales disponibles:', 'info');
+            addOutput('  help - Mostrar esta ayuda', 'info');
+            addOutput('  help-waste - Ayuda del servicio de residuos', 'info');
+            addOutput('  test - Probar conexión con API Gateway', 'info');
+            addOutput('  clear - Limpiar consola', 'info');
+            addOutput('', 'info');
+            addOutput('📦 Servicio de Residuos:', 'info');
+            addOutput('  waste-levels - Ver niveles de llenado de contenedores', 'info');
+            addOutput('  waste-collect <id> - Llamar recogida para un contenedor', 'info');
+            addOutput('  waste-collect all - Llamar recogida para todos', 'info');
+            addOutput('  add-waste <id> [amount] - Añadir basura a contenedor', 'info');
+            addOutput('  help-waste - Ayuda detallada del servicio de residuos', 'info');
+            addOutput('', 'info');
+            addOutput('🚦 Servicio de Tráfico:', 'info');
+            addOutput('  traffic-lights - Ver estado de todos los semáforos', 'info');
+            addOutput('  traffic-sensors - Ver estado de todos los sensores', 'info');
+            addOutput('  change-light <id> <state> - Cambiar semáforo', 'info');
+            addOutput('  help-traffic - Ayuda detallada del servicio de tráfico', 'info');
+            addOutput('', 'info');
+            addOutput('📹 Servicio de Seguridad:', 'info');
+            addOutput('  security-cameras - Ver estado de todas las cámaras', 'info');
+            addOutput('  security-drones - Ver estado de todos los drones', 'info');
+            addOutput('  camera-alert <id> <type> - Generar alerta de cámara', 'info');
+            addOutput('  drone-patrol <id> - Iniciar patrullaje de drone', 'info');
+            addOutput('  help-security - Ayuda detallada del servicio de seguridad', 'info');
+            addOutput('', 'info');
+            addOutput('🚨 Servicio de Emergencias:', 'info');
+            addOutput('  emergency-units - Ver estado de todas las unidades', 'info');
+            addOutput('  emergency-incidents - Ver todos los incidentes activos', 'info');
+            addOutput('  create-emergency <type> <location> [priority]', 'info');
+            addOutput('  assign-unit <unitId> [incidentId] - Asignar unidad a incidente', 'info');
+            addOutput('  help-emergency - Ayuda detallada del servicio de emergencias', 'info');
+            addOutput('', 'info');
+            addOutput('🏥 Servicio de Salud:', 'info');
+            addOutput('  health-centers - Ver estado de todos los centros de salud', 'info');
+            addOutput('  health-appointments - Ver todas las citas médicas', 'info');
+            addOutput('  create-appointment <patientId> <centerId> <date>', 'info');
+            addOutput('  help-health - Ayuda detallada del servicio de salud', 'info');
+            addOutput('', 'info');
+            addOutput('📹 Servicio de Seguridad:', 'info');
+            addOutput('  camera-alert <cameraId> <alertType>', 'info');
+        }
+
+        function showWasteHelp() {
+            addOutput('🗑️ Ayuda del Servicio de Residuos:', 'info');
+            addOutput('', 'info');
+            addOutput('Comandos disponibles:', 'info');
+            addOutput('  waste-levels - Ver el nivel de llenado de todos los contenedores', 'info');
+            addOutput('  waste-collect <containerId> - Llamar servicio de recogida para un contenedor', 'info');
+            addOutput('  waste-collect all - Llamar servicio de recogida para todos los contenedores', 'info');
+            addOutput('  add-waste <containerId> [amount] - Añadir basura a un contenedor', 'info');
+            addOutput('', 'info');
+            addOutput('Ejemplos:', 'info');
+            addOutput('  waste-levels', 'info');
+            addOutput('  waste-collect 1', 'info');
+            addOutput('  waste-collect all', 'info');
+            addOutput('  add-waste 1 30', 'info');
+        }
+
+        function showTrafficHelp() {
+            addOutput('🚦 Ayuda del Servicio de Tráfico:', 'info');
+            addOutput('', 'info');
+            addOutput('Comandos disponibles:', 'info');
+            addOutput('  traffic-lights - Ver el estado de todos los semáforos', 'info');
+            addOutput('  traffic-sensors - Ver el estado de todos los sensores de tráfico', 'info');
+            addOutput('  change-light <lightId> <state> - Cambiar estado de un semáforo', 'info');
+            addOutput('', 'info');
+            addOutput('Estados de semáforo:', 'info');
+            addOutput('  GREEN - Verde (tráfico fluye)', 'info');
+            addOutput('  RED - Rojo (tráfico detenido)', 'info');
+            addOutput('  YELLOW - Amarillo (precaución)', 'info');
+            addOutput('', 'info');
+            addOutput('Ejemplos:', 'info');
+            addOutput('  traffic-lights', 'info');
+            addOutput('  traffic-sensors', 'info');
+            addOutput('  change-light 1 GREEN', 'info');
+            addOutput('  change-light 2 RED', 'info');
+        }
+
+        function showSecurityHelp() {
+            addOutput('📹 Ayuda del Servicio de Seguridad y Vigilancia:', 'info');
+            addOutput('', 'info');
+            addOutput('Comandos disponibles:', 'info');
+            addOutput('  security-cameras - Ver el estado de todas las cámaras de vigilancia', 'info');
+            addOutput('  security-drones - Ver el estado de todos los drones de patrullaje', 'info');
+            addOutput('  camera-alert <cameraId> <alertType> - Generar alerta de una cámara', 'info');
+            addOutput('  drone-patrol <droneId> - Iniciar patrullaje de un drone', 'info');
+            addOutput('', 'info');
+            addOutput('Tipos de alerta:', 'info');
+            addOutput('  INTRUSION - Intrusión detectada', 'info');
+            addOutput('  SUSPICIOUS - Actividad sospechosa', 'info');
+            addOutput('  EMERGENCY - Emergencia detectada', 'info');
+            addOutput('  VANDALISM - Vandalismo detectado', 'info');
+            addOutput('', 'info');
+            addOutput('Ejemplos:', 'info');
+            addOutput('  security-cameras', 'info');
+            addOutput('  security-drones', 'info');
+            addOutput('  camera-alert 1 INTRUSION', 'info');
+            addOutput('  drone-patrol 1', 'info');
+        }
+
+        async function executeSecurityCameras() {
+            try {
+                const response = await fetch(`${API_GATEWAY_URL}/security/cameras/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                if (data.success && data.cameras) {
+                    addOutput('📹 Estado de Cámaras de Vigilancia:', 'info');
+                    addOutput('', 'info');
+                    data.cameras.forEach(camera => {
+                        const status = camera.status || 'UNKNOWN';
+                        const type = camera.type || 'STANDARD';
+                        const statusIcon = status === 'ACTIVE' ? '🟢' : '🔴';
+                        const typeIcon = type === 'AI_ENABLED' ? '🤖' : '📷';
+                        addOutput(`  ${statusIcon}${typeIcon} Cámara #${camera.id} - ${camera.location}:`, 'info');
+                        addOutput(`     Estado: ${status} | Tipo: ${type}`, 'info');
+                        addOutput('', 'info');
+                    });
+                    addOutput(`📊 Resumen:`, 'info');
+                    addOutput(`   Total: ${data.total} cámaras`, 'info');
+                    addOutput(`   🟢 Activas: ${data.activeCount}`, 'info');
+                    addOutput(`   🤖 Con IA: ${data.aiEnabledCount}`, 'info');
+                } else {
+                    addOutput('❌ No se pudieron obtener las cámaras', 'error');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeSecurityCameras:', error);
+            }
+        }
+
+        async function executeSecurityDrones() {
+            try {
+                const response = await fetch(`${API_GATEWAY_URL}/security/drones/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                if (data.success && data.drones) {
+                    addOutput('🚁 Estado de Drones de Patrullaje:', 'info');
+                    addOutput('', 'info');
+                    data.drones.forEach(drone => {
+                        const status = drone.status || 'UNKNOWN';
+                        const battery = drone.batteryLevel || 0;
+                        const statusIcon = status === 'PATROLLING' ? '🟢' : '🔴';
+                        const batteryIcon = battery > 50 ? '🔋' : battery > 20 ? '🪫' : '⚠️';
+                        addOutput(`  ${statusIcon}${batteryIcon} Drone #${drone.id} - ${drone.location}:`, 'info');
+                        addOutput(`     Estado: ${status} | Batería: ${battery}%`, 'info');
+                        addOutput('', 'info');
+                    });
+                    addOutput(`📊 Estadísticas:`, 'info');
+                    addOutput(`   Total: ${data.total} drones`, 'info');
+                    addOutput(`   🟢 En patrullaje: ${data.patrollingCount}`, 'info');
+                    addOutput(`   Batería promedio: ${data.averageBattery}%`, 'info');
+                } else {
+                    addOutput('❌ No se pudieron obtener los drones', 'error');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeSecurityDrones:', error);
+            }
+        }
+
+        async function executeDronePatrol(droneId) {
+            try {
+                const response = await fetch(`${API_GATEWAY_URL}/security/drones/${droneId}/patrol`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                addOutput(`✅ ${data.message}`, 'success');
+                if (data.drone) {
+                    addOutput(`   Estado: ${data.drone.status} | Batería: ${data.drone.batteryLevel}%`, 'info');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeDronePatrol:', error);
+            }
+        }
+
+        async function executeTrafficLights() {
+            try {
+                const response = await fetch(`${API_GATEWAY_URL}/traffic/lights/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                if (data.success && data.lights) {
+                    addOutput('🚦 Estado de Semáforos:', 'info');
+                    addOutput('', 'info');
+                    data.lights.forEach(light => {
+                        const status = light.status || 'UNKNOWN';
+                        const statusIcon = status === 'GREEN' ? '🟢' : status === 'RED' ? '🔴' : status === 'YELLOW' ? '🟡' : '⚪';
+                        addOutput(`  ${statusIcon} Semáforo #${light.id} - ${light.location}:`, 'info');
+                        addOutput(`     Estado: ${status} | Duración: ${light.duration}s`, 'info');
+                        addOutput('', 'info');
+                    });
+                    addOutput(`📊 Resumen:`, 'info');
+                    addOutput(`   Total: ${data.total} semáforos`, 'info');
+                    addOutput(`   🟢 Verdes: ${data.greenCount}`, 'info');
+                    addOutput(`   🔴 Rojos: ${data.redCount}`, 'info');
+                    addOutput(`   🟡 Amarillos: ${data.yellowCount}`, 'info');
+                } else {
+                    addOutput('❌ No se pudieron obtener los semáforos', 'error');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeTrafficLights:', error);
+            }
+        }
+
+        async function executeTrafficSensors() {
+            try {
+                const response = await fetch(`${API_GATEWAY_URL}/traffic/sensors/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                if (data.success && data.sensors) {
+                    addOutput('📡 Estado de Sensores de Tráfico:', 'info');
+                    addOutput('', 'info');
+                    data.sensors.forEach(sensor => {
+                        const count = sensor.vehicleCount || 0;
+                        const status = sensor.status || 'UNKNOWN';
+                        const statusIcon = status === 'ACTIVE' ? '🟢' : '🔴';
+                        const density = count < 10 ? 'Baja' : count < 30 ? 'Media' : 'Alta';
+                        addOutput(`  ${statusIcon} Sensor #${sensor.id} - ${sensor.location}:`, 'info');
+                        addOutput(`     Vehículos detectados: ${count} | Densidad: ${density} | Estado: ${status}`, 'info');
+                        addOutput('', 'info');
+                    });
+                    addOutput(`📊 Estadísticas:`, 'info');
+                    addOutput(`   Total sensores: ${data.total}`, 'info');
+                    addOutput(`   Total vehículos detectados: ${data.totalVehicles}`, 'info');
+                    addOutput(`   Promedio por sensor: ${data.averageVehicles} vehículos`, 'info');
+                } else {
+                    addOutput('❌ No se pudieron obtener los sensores', 'error');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeTrafficSensors:', error);
+            }
+        }
+
+        async function executeWasteLevels() {
+            try {
+                const response = await fetch(`${API_GATEWAY_URL}/waste/containers/levels`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                if (data.success && data.containers) {
+                    addOutput('📊 Niveles de llenado de contenedores:', 'info');
+                    addOutput('', 'info');
+                    data.containers.forEach(container => {
+                        const level = container.fillLevel || 0;
+                        const status = container.status || 'UNKNOWN';
+                        const barLength = Math.floor(level / 5);
+                        const bar = '█'.repeat(barLength) + '░'.repeat(20 - barLength);
+                        const statusIcon = status === 'FULL' ? '🔴' : status === 'ACTIVE' ? '🟢' : '🟡';
+                        addOutput(`  ${statusIcon} Contenedor #${container.id} (${container.name}):`, 'info');
+                        addOutput(`     ${bar} ${level}% - ${status}`, 'info');
+                        addOutput(`     Ubicación: ${container.location}`, 'info');
+                        addOutput('', 'info');
+                    });
+                    addOutput(`Total: ${data.total} contenedores`, 'info');
+                } else {
+                    addOutput('❌ No se pudieron obtener los niveles', 'error');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeWasteLevels:', error);
+            }
+        }
+
+        async function executeCollectWaste(containerId) {
+            try {
+                const response = await fetch(`${API_GATEWAY_URL}/waste/containers/${containerId}/collect`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                addOutput(`✅ ${data.message}`, 'success');
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeCollectWaste:', error);
+            }
+        }
+
+        async function executeCollectAllWaste() {
+            try {
+                const response = await fetch(`${API_GATEWAY_URL}/waste/containers/collect-all`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                addOutput(`✅ ${data.message}`, 'success');
+                if (data.collected !== undefined) {
+                    addOutput(`   Contenedores vaciados: ${data.collected}`, 'info');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeCollectAllWaste:', error);
+            }
+        }
+
+        async function executeAddWaste(containerId, amount) {
+            try {
+                const url = `${API_GATEWAY_URL}/waste/containers/${containerId}/add-waste?amount=${encodeURIComponent(amount)}`;
+                console.log('Making POST request to:', url);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        console.error('Error data:', errorData);
+                        errorMsg = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } catch (e) {
+                        const errorText = await response.text();
+                        console.error('Error text:', errorText);
+                        errorMsg = errorText || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                addOutput(`✅ ${data.message}`, 'success');
+                if (data.container) {
+                    addOutput(`   Nivel de llenado: ${data.container.fillLevel}%`, 'info');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeAddWaste:', error);
+            }
+        }
+
+        async function executeCreateEmergency(type, location, priority) {
+            try {
+                const url = `${API_GATEWAY_URL}/emergency/incidents/create?type=${encodeURIComponent(type)}&location=${encodeURIComponent(location)}&priority=${priority}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || errorMsg;
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                addOutput(`✅ ${data.message}`, 'success');
+                if (data.incident) {
+                    addOutput(`   ID: ${data.incident.id}, Prioridad: ${data.incident.priority}`, 'info');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeCreateEmergency:', error);
+            }
+        }
+
+        async function executeChangeLight(lightId, state) {
+            try {
+                const url = `${API_GATEWAY_URL}/traffic/lights/${lightId}/change?state=${state}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || errorMsg;
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                addOutput(`✅ ${data.message}`, 'success');
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeChangeLight:', error);
+            }
+        }
+
+        async function executeCameraAlert(cameraId, alertType) {
+            try {
+                const url = `${API_GATEWAY_URL}/security/cameras/${cameraId}/alert?alertType=${alertType}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || errorMsg;
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                addOutput(`✅ ${data.message}`, 'success');
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeCameraAlert:', error);
+            }
+        }
+
+        function showHealthHelp() {
+            addOutput('🏥 Ayuda del Servicio de Salud y Bienestar:', 'info');
+            addOutput('', 'info');
+            addOutput('Comandos disponibles:', 'info');
+            addOutput('  health-centers - Ver el estado de todos los centros de salud', 'info');
+            addOutput('  health-appointments - Ver todas las citas médicas programadas', 'info');
+            addOutput('  create-appointment <patientId> <centerId> <date> - Crear nueva cita médica', 'info');
+            addOutput('', 'info');
+            addOutput('Ejemplos:', 'info');
+            addOutput('  health-centers', 'info');
+            addOutput('  health-appointments', 'info');
+            addOutput('  create-appointment P123 1 2025-12-15', 'info');
+        }
+
+        async function executeHealthCenters() {
+            try {
+                const response = await fetch(`${API_GATEWAY_URL}/health/centers/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                if (data.success && data.centers) {
+                    addOutput('🏥 Estado de Centros de Salud:', 'info');
+                    addOutput('', 'info');
+                    data.centers.forEach(center => {
+                        const status = center.status || 'UNKNOWN';
+                        const slots = center.availableSlots || 0;
+                        const statusIcon = status === 'OPEN' ? '🟢' : '🔴';
+                        addOutput(`  ${statusIcon} Centro #${center.id} - ${center.name}:`, 'info');
+                        addOutput(`     Ubicación: ${center.location}`, 'info');
+                        addOutput(`     Estado: ${status} | Espacios disponibles: ${slots}`, 'info');
+                        addOutput('', 'info');
+                    });
+                    addOutput(`📊 Resumen:`, 'info');
+                    addOutput(`   Total: ${data.total} centros`, 'info');
+                    addOutput(`   🟢 Abiertos: ${data.openCount}`, 'info');
+                    addOutput(`   Espacios totales disponibles: ${data.totalAvailableSlots}`, 'info');
+                } else {
+                    addOutput('❌ No se pudieron obtener los centros', 'error');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeHealthCenters:', error);
+            }
+        }
+
+        async function executeHealthAppointments() {
+            try {
+                const response = await fetch(`${API_GATEWAY_URL}/health/appointments/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                if (data.success && data.appointments) {
+                    addOutput('📅 Estado de Citas Médicas:', 'info');
+                    addOutput('', 'info');
+                    data.appointments.forEach(appointment => {
+                        const status = appointment.status || 'UNKNOWN';
+                        const statusIcon = status === 'SCHEDULED' ? '📅' : status === 'COMPLETED' ? '✅' : status === 'CANCELLED' ? '❌' : '❓';
+                        addOutput(`  ${statusIcon} Cita #${appointment.id}:`, 'info');
+                        addOutput(`     Paciente: ${appointment.patientId} | Centro: ${appointment.centerId}`, 'info');
+                        addOutput(`     Fecha: ${appointment.date} | Estado: ${status}`, 'info');
+                        addOutput('', 'info');
+                    });
+                    addOutput(`📊 Estadísticas:`, 'info');
+                    addOutput(`   Total: ${data.total} citas`, 'info');
+                    addOutput(`   📅 Programadas: ${data.scheduledCount}`, 'info');
+                    addOutput(`   ✅ Completadas: ${data.completedCount}`, 'info');
+                    addOutput(`   ❌ Canceladas: ${data.cancelledCount}`, 'info');
+                } else {
+                    addOutput('❌ No se pudieron obtener las citas', 'error');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeHealthAppointments:', error);
+            }
+        }
+
+        function showEmergencyHelp() {
+            addOutput('🚨 Ayuda del Servicio de Emergencias:', 'info');
+            addOutput('', 'info');
+            addOutput('Comandos disponibles:', 'info');
+            addOutput('  emergency-units - Ver el estado de todas las unidades de emergencia', 'info');
+            addOutput('  emergency-incidents - Ver todos los incidentes activos', 'info');
+            addOutput('  create-emergency <type> <location> [priority] - Crear nuevo incidente', 'info');
+            addOutput('  assign-unit <unitId> [incidentId] - Asignar unidad a incidente', 'info');
+            addOutput('', 'info');
+            addOutput('Tipos de emergencia:', 'info');
+            addOutput('  FIRE - Incendio', 'info');
+            addOutput('  MEDICAL - Emergencia médica', 'info');
+            addOutput('  ACCIDENT - Accidente', 'info');
+            addOutput('  CRIME - Delito', 'info');
+            addOutput('', 'info');
+            addOutput('Prioridades:', 'info');
+            addOutput('  HIGH - Alta prioridad', 'info');
+            addOutput('  MEDIUM - Prioridad media', 'info');
+            addOutput('  LOW - Baja prioridad', 'info');
+            addOutput('', 'info');
+            addOutput('Ejemplos:', 'info');
+            addOutput('  emergency-units', 'info');
+            addOutput('  emergency-incidents', 'info');
+            addOutput('  create-emergency FIRE "Calle Principal" HIGH', 'info');
+            addOutput('  assign-unit 1 1', 'info');
+        }
+
+        async function executeEmergencyUnits() {
+            try {
+                const response = await fetch(`${API_GATEWAY_URL}/emergency/units/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                if (data.success && data.units) {
+                    addOutput('🚨 Estado de Unidades de Emergencia:', 'info');
+                    addOutput('', 'info');
+                    data.units.forEach(unit => {
+                        const status = unit.status || 'UNKNOWN';
+                        const type = unit.type || 'UNKNOWN';
+                        const statusIcon = status === 'AVAILABLE' ? '🟢' : status === 'ON_DUTY' ? '🔴' : '🟡';
+                        const typeIcon = type === 'AMBULANCE' ? '🚑' : type === 'FIRE_TRUCK' ? '🚒' : type === 'POLICE' ? '🚓' : '🚨';
+                        addOutput(`  ${statusIcon}${typeIcon} Unidad #${unit.id} (${type}):`, 'info');
+                        addOutput(`     Ubicación: ${unit.location} | Estado: ${status}`, 'info');
+                        addOutput('', 'info');
+                    });
+                    addOutput(`📊 Estadísticas:`, 'info');
+                    addOutput(`   Total: ${data.total} unidades`, 'info');
+                    addOutput(`   🟢 Disponibles: ${data.availableCount}`, 'info');
+                    addOutput(`   🔴 En servicio: ${data.onDutyCount}`, 'info');
+                    addOutput(`   🚑 Ambulancias: ${data.ambulanceCount}`, 'info');
+                    addOutput(`   🚒 Bomberos: ${data.fireTruckCount}`, 'info');
+                    addOutput(`   🚓 Policía: ${data.policeCount}`, 'info');
+                } else {
+                    addOutput('❌ No se pudieron obtener las unidades', 'error');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeEmergencyUnits:', error);
+            }
+        }
+
+        async function executeEmergencyIncidents() {
+            try {
+                const response = await fetch(`${API_GATEWAY_URL}/emergency/incidents/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                if (data.success && data.incidents) {
+                    addOutput('🚨 Estado de Incidentes de Emergencia:', 'info');
+                    addOutput('', 'info');
+                    data.incidents.forEach(incident => {
+                        const status = incident.status || 'UNKNOWN';
+                        const priority = incident.priority || 'UNKNOWN';
+                        const statusIcon = status === 'ACTIVE' ? '🔴' : '🟢';
+                        const priorityIcon = priority === 'HIGH' ? '🔴' : priority === 'MEDIUM' ? '🟡' : '🟢';
+                        addOutput(`  ${statusIcon}${priorityIcon} Incidente #${incident.id} (${incident.type}):`, 'info');
+                        addOutput(`     Ubicación: ${incident.location}`, 'info');
+                        addOutput(`     Estado: ${status} | Prioridad: ${priority}`, 'info');
+                        addOutput('', 'info');
+                    });
+                    addOutput(`📊 Estadísticas:`, 'info');
+                    addOutput(`   Total: ${data.total} incidentes`, 'info');
+                    addOutput(`   🔴 Activos: ${data.activeCount}`, 'info');
+                    addOutput(`   🔴 Alta prioridad: ${data.highPriorityCount}`, 'info');
+                    addOutput(`   🟡 Prioridad media: ${data.mediumPriorityCount}`, 'info');
+                    addOutput(`   🟢 Baja prioridad: ${data.lowPriorityCount}`, 'info');
+                } else {
+                    addOutput('❌ No se pudieron obtener los incidentes', 'error');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeEmergencyIncidents:', error);
+            }
+        }
+
+        async function executeAssignUnit(unitId, incidentId) {
+            try {
+                let url = `${API_GATEWAY_URL}/emergency/units/${unitId}/assign`;
+                if (incidentId) {
+                    url += `?incidentId=${encodeURIComponent(incidentId)}`;
+                }
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                addOutput(`✅ ${data.message}`, 'success');
+                if (data.unit) {
+                    addOutput(`   Unidad: ${data.unit.type} | Estado: ${data.unit.status}`, 'info');
+                }
+                if (data.incident) {
+                    addOutput(`   Incidente: ${data.incident.type} en ${data.incident.location}`, 'info');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeAssignUnit:', error);
+            }
+        }
+
+        async function executeCreateAppointment(patientId, centerId, date) {
+            try {
+                const url = `${API_GATEWAY_URL}/health/appointments/create?patientId=${patientId}&centerId=${centerId}&date=${date}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorData.error || errorMsg;
+                    } catch (e) {
+                        errorMsg = await response.text() || errorMsg;
+                    }
+                    addOutput(`❌ Error: ${errorMsg}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                addOutput(`✅ ${data.message}`, 'success');
+                if (data.appointment) {
+                    addOutput(`   ID de cita: ${data.appointment.id}`, 'info');
+                }
+            } catch (error) {
+                addOutput(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error en executeCreateAppointment:', error);
+            }
+        }
+
+        // Navegación por historial con flechas
+        document.getElementById('commandInput').addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (commandHistoryIndex > 0) {
+                    commandHistoryIndex--;
+                    document.getElementById('commandInput').value = commandHistory[commandHistoryIndex];
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (commandHistoryIndex < commandHistory.length - 1) {
+                    commandHistoryIndex++;
+                    document.getElementById('commandInput').value = commandHistory[commandHistoryIndex];
+                } else {
+                    commandHistoryIndex = commandHistory.length;
+                    document.getElementById('commandInput').value = '';
+                }
+            }
+        });
+
+        // Mensaje de bienvenida
+        addOutput('🚀 Línea de comandos lista. Escribe "help" para ver comandos disponibles.', 'success');
+        addOutput('💡 Escribe "test" para probar la conexión con el API Gateway', 'info');
+
+        // Cargar servicios al iniciar
+        loadAllServices();
+        
+        // Auto-refresh cada 10 segundos
+        setInterval(loadAllServices, 10000);
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,65 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: waste-service
+          uri: lb://waste-service
+          predicates:
+            - Path=/api/waste/**
+          filters:
+            - StripPrefix=2
+        - id: traffic-service
+          uri: lb://traffic-service
+          predicates:
+            - Path=/api/traffic/**
+          filters:
+            - StripPrefix=1
+        - id: security-service
+          uri: lb://security-service
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+        - id: health-service
+          uri: lb://health-service
+          predicates:
+            - Path=/api/health/**
+          filters:
+            - StripPrefix=1
+        - id: emergency-service
+          uri: lb://emergency-service
+          predicates:
+            - Path=/api/emergency/**
+          filters:
+            - StripPrefix=1
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 5
+    initial-instance-info-replication-interval-seconds: 5
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    gateway:
+      enabled: true
